@@ -10,7 +10,6 @@ API_URL = "http://127.0.0.1:8000/detect"
 
 st.set_page_config(page_title="Aegis Crypto Intelligence", layout="wide", page_icon="🛡️", initial_sidebar_state="expanded")
 
-# --- Vibrant, Modern CSS Overhaul ---
 st.markdown("""
 <style>
     .hero-banner {
@@ -99,7 +98,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# --- Hero Section ---
 st.markdown("""
 <div class="hero-banner">
     <div class="hero-title">🛡️ Aegis Intelligence Platform</div>
@@ -107,7 +105,6 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# --- Database Integration ---
 def fetch_data(project: str):
     try:
         conn = sqlite3.connect(DB_PATH)
@@ -118,7 +115,6 @@ def fetch_data(project: str):
     except Exception:
         return pd.DataFrame()
 
-# --- UI Controls Sidebar ---
 with st.sidebar:
     st.header("🎯 Target Acquisition")
     search_query = st.text_input("Enter Token / Project:", value="Ethereum", help="Supports precise crypto assets like PEPE, SHIB, Ethereum.")
@@ -142,7 +138,6 @@ with st.sidebar:
     
     run_btn = st.button("Execute Deep Analysis", use_container_width=True, type="primary")
 
-# --- Core App Logic ---
 if run_btn:
     with st.status(f"Scanning target network for '{search_query}'...", expanded=True) as status:
         st.write("Initializing ML Triple-Ensemble...")
@@ -155,11 +150,11 @@ if run_btn:
                 data = res.json()
                 status.update(label="Target Acquisition Complete!", state="complete", expanded=False)
                 
-                # --- RESULTS HEADER ---
+                # RESULTS HEADER
                 st.markdown(f"<h2 style='text-align: center; margin-top: 10px; color: #1e293b;'>Intelligence Profile: {search_query.upper()}</h2>", unsafe_allow_html=True)
                 st.markdown("<br>", unsafe_allow_html=True)
                 
-                # --- METRICS ROW ---
+                # METRICS ROW 
                 c1, c2, c3, c4 = st.columns(4)
                 
                 risk_val = data['final_risk'] * 100
@@ -183,14 +178,12 @@ if run_btn:
                     s_col, s_class = ("#EF4444", "metric-card-risk") if sev == "CRITICAL" else ("#F59E0B", "metric-card-warn") if sev == "HIGH" else ("#3B82F6", "metric-card-info") if sev == "MODERATE" else ("#10B981", "metric-card-safe")
                     st.markdown(f"<div class='metric-card {s_class}'><div class='metric-title'>Severity Level</div><div class='metric-value' style='color:{s_col}'>{sev}</div></div>", unsafe_allow_html=True)
                 
-                # --- BREAKDOWN ROW ---
                 st.markdown("<br>", unsafe_allow_html=True)
                 col_chart, col_flags = st.columns([1.2, 1])
                 
                 with col_chart:
                     st.markdown("#### 🔭 Dimensional Threat Signature")
                     
-                    # Internal sub-columns for Radar vs Bars
                     rad_col, bar_col = st.columns([1.3, 1])
                     
                     with rad_col:
@@ -248,7 +241,6 @@ if run_btn:
                     else:
                         st.markdown(f"<div class='safe-flag'>✅ No critical anomaly footprints detected. Data appears organically derived.</div>", unsafe_allow_html=True)
                 
-                # --- Under The Hood Expander ---
                 with st.expander("🛠️ View Under-The-Hood Diagnostics & JSON Matrix"):
                     st.json(data)
                         
@@ -259,7 +251,6 @@ if run_btn:
             status.update(label="Connection constraints failure.", state="error")
             st.error(f"Failed to connect to backend: {e}")
 
-# --- Historical UI Plotting ---
 st.markdown("<br><hr style='border-color: #e2e8f0; margin-bottom: 30px;'>", unsafe_allow_html=True)
 st.markdown(f"### 📈 Temporal Domain Tracker: {search_query.upper()}")
 

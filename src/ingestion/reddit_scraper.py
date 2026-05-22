@@ -6,9 +6,7 @@ from src.config import settings
 from src.logger import logger
 
 async def _fetch_comments_from_submission(submission) -> List[str]:
-    """Helper to heavily parallelize the actual HTTP comment fetching part."""
     comments = []
-    # Avoid replacing more comments to stay lightning fast
     await submission.load()
     for comment in submission.comments:
         if isinstance(comment, asyncpraw.models.Comment):
@@ -16,7 +14,7 @@ async def _fetch_comments_from_submission(submission) -> List[str]:
                 comments.append(comment.body)
     return comments
 
-# Retry logic: Wait 2s, then 4s, maximum 3 retries, only for Exceptions (prevents networking crashes)
+# Retry logic: Wait 2s, then 4s, maximum 3 retries, only for Exceptions
 @retry(
     wait=wait_exponential(multiplier=1, min=2, max=10),
     stop=stop_after_attempt(3),
@@ -35,7 +33,7 @@ async def get_reddit_data(keyword: str, limit: int = 5) -> List[str]:
 
         subreddit = await reddit.subreddit("CryptoCurrency")
         
-        # Async generator for searching - Sort specifically by 'new' for near-real-time context!
+        # Async generator for searching - Sort specifically by new for near-real-time context
         tasks = []
         async for submission in subreddit.search(keyword, sort='new', limit=limit):
             tasks.append(_fetch_comments_from_submission(submission))
@@ -49,7 +47,6 @@ async def get_reddit_data(keyword: str, limit: int = 5) -> List[str]:
         return comments
     except Exception as e:
         logger.error(f"Error fetching data from Reddit for '{keyword}': {e}")
-        # Reraise so tenacity catches it
         raise e
     finally:
         if reddit:

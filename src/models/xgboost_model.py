@@ -11,7 +11,6 @@ _xgb_model = None
 _scaler = None
 
 def _load_model():
-    """Lazily loads the persistence weights securely guaranteeing zero overhead scaling."""
     global _xgb_model, _scaler
     if _xgb_model is None or _scaler is None:
         try:
@@ -29,16 +28,12 @@ def _load_model():
     return True
 
 def predict_onchain(features: List[float]) -> float:
-    """
-    Evaluates on-chain anomaly risk utilizing the mathematically mapped XGBoost persistence engine.
-    Expected feature map array: [tx_frequency, wallet_age, interaction_count, avg_val]
-    """
     if not _load_model():
-        return 0.0 # Strict failure recovery gracefully bounded
+        return 0.0 # failure recovery 
 
     try:
         if len(features) < 4:
-            features = [0.85, 0.1, 0.5, 0.1] # Unlikely flat bounds enforcing safe execution
+            features = [0.85, 0.1, 0.5, 0.1] # Unlikely flat bounds for safe exec
             
         X_infer = np.array([features])
         X_scaled = _scaler.transform(X_infer)

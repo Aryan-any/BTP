@@ -7,8 +7,6 @@ DB_PATH = "scam_data.db"
 async def init_db():
     try:
         async with aiosqlite.connect(DB_PATH) as db:
-            # OPTIMIZATION: Enable Write-Ahead Logging to massively boost concurrent read/write 
-            # speeds for asynchronous FastAPI endpoints without locking natively.
             await db.execute('PRAGMA journal_mode=WAL;')
             await db.execute('PRAGMA synchronous=NORMAL;')
             await db.execute('''
@@ -25,7 +23,6 @@ async def init_db():
         logger.error(f"Database Initialization Failed: {e}")
 
 async def write_history(project: str, risk: float, confidence: float):
-    """Safely non-blocking execute."""
     try:
         async with aiosqlite.connect(DB_PATH) as db:
             await db.execute(
@@ -37,7 +34,6 @@ async def write_history(project: str, risk: float, confidence: float):
         logger.error(f"Failed to persist string: {e}")
 
 async def fetch_recent_risks(project: str, limit: int = 10) -> List[float]:
-    """Retrieve the most recent N risks explicitly avoiding full table sweeps."""
     try:
         async with aiosqlite.connect(DB_PATH) as db:
             async with db.execute(
@@ -53,11 +49,9 @@ async def fetch_recent_risks(project: str, limit: int = 10) -> List[float]:
         return []
 
 async def update_and_get_trend_async(project: str, current_risk: float, confidence: float, threshold: float = 0.1) -> str:
-    """Async variant replacing the memory deque entirely preserving O(1) limits."""
-    # Write the new payload
+    # New payload
     await write_history(project, current_risk, confidence)
     
-    # Read the history
     history = await fetch_recent_risks(project, limit=2) # Only need the last two specifically for simple threshold delta
     
     if len(history) < 2:

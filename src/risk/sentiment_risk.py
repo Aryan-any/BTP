@@ -4,7 +4,6 @@ import math
 from typing import List, Dict, Tuple
 from src.logger import logger
 
-# Specialized Deep-Crypto Scam Dictionary catching semantic anomalies ML models miss natively
 CRYPTO_FRAUD_LEXICON = [
     r"\brug\s?pull\b", r"\bhoneypot\b", r"\bscam\b", r"\bponzi\b",
     r"\bdevs?\s?dump(ed)?\b", r"\bcontract\s?drain\b", r"\bslow\s?rug\b",
@@ -13,11 +12,9 @@ CRYPTO_FRAUD_LEXICON = [
     r"\bblacklisted\s?address\b", r"\bcan\'?t\s?sell\b", r"\bsiphoned\b"
 ]
 
-# Compile for high-speed pattern matching
 FRAUD_PATTERNS = [re.compile(pattern, re.IGNORECASE) for pattern in CRYPTO_FRAUD_LEXICON]
 
 def _calculate_lexicon_risk(raw_texts: List[str]) -> Tuple[float, List[str]]:
-    """Detects implicit crypto-specific fraud flags missed by standard sentiment NLP."""
     if not raw_texts:
         return 0.0, []
         
@@ -36,7 +33,6 @@ def _calculate_lexicon_risk(raw_texts: List[str]) -> Tuple[float, List[str]]:
     
     explanations = []
     if matched_flags:
-        # Don't list all if there are dozens to keep it concise, truncate visual
         flags_str = ', '.join(list(matched_flags)[:3])
         if len(matched_flags) > 3:
             flags_str += "..."
@@ -45,22 +41,19 @@ def _calculate_lexicon_risk(raw_texts: List[str]) -> Tuple[float, List[str]]:
     return lexicon_risk, explanations
 
 def compute_sentiment_risk(scores: List[Dict[str, float]], raw_texts: List[str] = None) -> Tuple[float, List[str], float]:
-    """Computes composite risk, bounded explanations, and logarithmic confidence."""
     explanations = []
     try:
         volume = len(scores) if scores else 0
-        # Formula constraint: Confidence scaling
         confidence = min(1.0, math.log(volume + 1) / 5.0)
 
         if volume == 0:
             logger.warning("No sentiment scores provided. Returning default safe boundaries.")
             return 0.0, explanations, confidence
 
-        # Extract strictly applying the 60/40 Hybrid bounds dynamically mapping fallbacks safely
         negatives = []
         for s in scores:
             vader_n = s.get('neg', 0.0)
-            finbert_n = s.get('finbert_neg', vader_n) # Gracefully fall back to VADER pure
+            finbert_n = s.get('finbert_neg', vader_n) 
             hybrid = (0.6 * finbert_n) + (0.4 * vader_n)
             negatives.append(hybrid)
 
@@ -85,7 +78,6 @@ def compute_sentiment_risk(scores: List[Dict[str, float]], raw_texts: List[str] 
         elif volume > 150:
             explanations.append("Unusual discussion volume observed")
             
-        # Hard constraint bound: Rule asks for max 5, avoid duplicates
         unique_expl = list(dict.fromkeys(explanations))
         final_explanations = unique_expl[:5]
             

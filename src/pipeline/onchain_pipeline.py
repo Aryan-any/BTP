@@ -24,16 +24,12 @@ async def _fetch_dex_metadata(project: str) -> dict:
         return {}
 
 async def run_onchain_pipeline(project: str) -> Tuple[float, float]:
-    """
-    Executes both Path A (XGBoost Tabular) and Path B (PyTorch GCN) concurrently natively scaling models.
-    """
     features = [0.1, 0.9, 0.5, 50.0] 
     interactions = 1
     
     try:
         data = await _fetch_dex_metadata(project)
         if data:
-            # Native Math Map perfectly avoiding fakes
             txns_m5 = data.get('txns', {}).get('m5', {}).get('buys', 0) + data.get('txns', {}).get('m5', {}).get('sells', 0)
             features[0] = min(txns_m5 / 100.0, 1.0) 
             
@@ -55,10 +51,10 @@ async def run_onchain_pipeline(project: str) -> Tuple[float, float]:
     except Exception as e:
         logger.warning(f"OnChain RPC integration failed for {project}, using safe assumptions: {e}")
             
-    # Path A: Tabular ML Inference
+    # Tabular ML Inference
     xgb_score = predict_onchain(features)
     
-    # Path B: Relational DL Inference
+    # Relational DL Inference
     gnn_score = predict_onchain_gnn(features, interactions=interactions)
     
     return float(xgb_score), float(gnn_score)

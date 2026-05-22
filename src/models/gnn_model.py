@@ -8,13 +8,9 @@ MODEL_PATH = "models/gnn_weights.pth"
 _gnn_model = None
 
 class GNNFraudDetector(nn.Module):
-    """
-    Genuine Deep Learning Pure PyTorch Relational Engine.
-    Evaluates Transaction Topology arrays mathematically.
-    """
     def __init__(self, input_dim=4, hidden_dim=64):
         super(GNNFraudDetector, self).__init__()
-        # Standard structural fully-connected map enforcing local CPU constraints securely
+        # Standard structural fully-connected map 
         self.fc1 = nn.Linear(input_dim, hidden_dim)
         torch.nn.init.xavier_uniform_(self.fc1.weight)
         
@@ -25,11 +21,6 @@ class GNNFraudDetector(nn.Module):
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, features: torch.Tensor, adj: torch.Tensor) -> torch.Tensor:
-        """
-        Matrix relational propagation mirroring GCN operations safely without complex binaries.
-        Applies Adjacency network structures natively across the linear manifolds.
-        H_l+1 = Sigmoid(A * ReLU(W * H_l))
-        """
         hidden = self.relu(self.fc1(features))
         
         # Message Passing (Neighborhood aggregations)
@@ -57,12 +48,11 @@ def _load_gnn():
     return True
 
 def predict_onchain_gnn(features: List[float], interactions: int = 1) -> float:
-    """Predicts precise structural arrays executing native pure PyTorch inferences."""
     if not _load_gnn():
         return 0.0
 
     try:
-        # Dynamic adjacency formulation simulating sub-topology
+        # Dynamic adjacency formulation
         nodes = max(interactions, 1)
         # Create synthetic subgraph representing the transaction tree explicitly mapping
         f_tensor = torch.tensor([features] * nodes, dtype=torch.float32)
@@ -72,7 +62,6 @@ def predict_onchain_gnn(features: List[float], interactions: int = 1) -> float:
         
         with torch.no_grad():
             output = _gnn_model(f_tensor, adj_matrix)
-            # Evaluate the anchor node (Index 0) natively 
             return float(output[0].item())
     except Exception as e:
         logger.error(f"GNN Prediction Failure: {e}")

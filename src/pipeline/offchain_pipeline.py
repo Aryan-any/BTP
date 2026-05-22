@@ -7,7 +7,6 @@ from src.models.finbert_model import get_finbert_scores_async
 from src.risk.sentiment_risk import compute_sentiment_risk
 
 async def run_offchain_pipeline(keyword: str) -> Tuple[float, List[str], float]:
-    """Executes the complete offchain evaluation blending VADER limits with deep PyTorch Transformers mapping."""
     try:
         data = await get_reddit_data(keyword)
     except Exception as e:
@@ -20,7 +19,7 @@ async def run_offchain_pipeline(keyword: str) -> Tuple[float, List[str], float]:
     if not cleaned:
         return 0.0, [], 0.0
 
-    # Execute ML inferences flawlessly decoupled across async loop contexts
+    # ML inferences across async loop contexts
     vader_task = asyncio.to_thread(get_vader_scores, cleaned)
     finbert_task = get_finbert_scores_async(cleaned)
     

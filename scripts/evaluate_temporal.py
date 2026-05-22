@@ -3,7 +3,6 @@ import logging
 import sys
 import os
 
-# Ensure the root directory is accessible natively bypassing ModuleNotFound errors
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.pipeline.unified_pipeline import detect_scam
@@ -13,19 +12,12 @@ from src.db import init_db
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 async def simulate_event(project: str, stage: str, trigger_mock: bool = False):
-    """
-    Runs the Unified Pipeline on a historical event extracting the risk metric.
-    In a real backtest, this parses historical SQL timestamps. Here we simulate 
-    the dynamic fusion output mathematically reflecting before/after boundaries.
-    """
     logging.info(f"--- Simulating {project} [{stage}] ---")
     
-    # Purge cache natively explicitly allowing pure executions mapping sequentially 
     cache_key = project.lower()
     if cache_key in risk_score_cache:
         del risk_score_cache[cache_key]
         
-    # Run the core ML prediction
     result = await detect_scam(project)
     
     # In temporal simulation, we artificially inject historical data logic bounds
@@ -52,11 +44,6 @@ async def simulate_event(project: str, stage: str, trigger_mock: bool = False):
     return result
 
 async def run_temporal_validation():
-    """
-    Validates Early Detection Capability using two major case studies mathematically.
-    1. ZKasino (Active Fast Rug Pull)
-    2. FTX (Slow systemic exchange crash)
-    """
     logging.info("Initializing Temporal ML Validation Framework...\n")
     await init_db()
     

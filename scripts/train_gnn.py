@@ -13,9 +13,6 @@ from src.models.gnn_model import GNNFraudDetector, MODEL_PATH
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def synthesize_graph_dataset(num_graphs=500, nodes_per_graph=10):
-    """
-    Synthesizes massive matrices strictly representing mapping relations internally testing topologies physically.
-    """
     X_list = []
     A_list = []
     Y_list = []

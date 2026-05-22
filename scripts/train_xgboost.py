@@ -20,12 +20,6 @@ os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(MODELS_DIR, exist_ok=True)
 
 def fetch_or_synthesize_dataset():
-    """
-    Attempts to fetch a public Ethereum fraud dataset. 
-    If external fetching is blocked/fails, mathematically synthesizes a 10,000 row 
-    statistically valid replica of Ethereum ERC-20 fraud transactions ensuring physical 
-    ML completion bounds.
-    """
     if os.path.exists(CSV_PATH):
         logging.info("Dataset found locally. Loading...")
         return pd.read_csv(CSV_PATH)
@@ -69,7 +63,7 @@ from imblearn.over_sampling import SMOTE
 def train_and_evaluate():
     df = fetch_or_synthesize_dataset()
     
-    # 1. Preprocessing & Imputation
+    # Preprocessing & Imputation
     df.fillna(df.median(), inplace=True)
     
     X = df[['tx_frequency', 'wallet_age', 'interaction_count', 'avg_val']].values
@@ -79,10 +73,10 @@ def train_and_evaluate():
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
     
-    # 2. Stratified Training Split
+    # Stratified Training Split
     X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, stratify=y, random_state=42)
     
-    # 3. Apply SMOTE exactly as mandated computationally balancing rare anomalies natively!
+    # Apply SMOTE exactly as mandated computationally balancing rare anomalies natively
     logging.info("Applying SMOTE natively expanding minority constraints dynamically without mock limits...")
     smote = SMOTE(random_state=42)
     X_train_resampled, y_train_resampled = smote.fit_resample(X_train, y_train)
@@ -90,9 +84,8 @@ def train_and_evaluate():
     logging.info(f"Target distribution before SMOTE: {np.bincount(y_train)}")
     logging.info(f"Target distribution after SMOTE: {np.bincount(y_train_resampled)}")
     
-    # Handle Class Imbalance natively natively (ratio is 1.0 after SMOTE naturally)
     
-    # 4. XGBoost Construction
+    # XGBoost Construction
     logging.info("Training pure Path A XGBoost Classifier using oversampled distribution bounds...")
     model = xgb.XGBClassifier(
         n_estimators=300,
@@ -100,12 +93,12 @@ def train_and_evaluate():
         learning_rate=0.1,
         random_state=42,
         eval_metric='logloss',
-        n_jobs=-1 # Use CPU limits safely
+        n_jobs=-1 
     )
     
     model.fit(X_train_resampled, y_train_resampled)
     
-    # 5. Evaluation Framework
+    #Evaluation Framework
     y_pred = model.predict(X_test)
     logging.info("\n--- XGBoost SMOTE-Enhanced Evaluation Metrics ---")
     logging.info(f"Accuracy:  {accuracy_score(y_test, y_pred):.4f}")
@@ -114,7 +107,7 @@ def train_and_evaluate():
     logging.info(f"F1-Score:  {f1_score(y_test, y_pred):.4f}")
     logging.info("\n" + classification_report(y_test, y_pred))
     
-    # 6. Serialization
+    #Serialization
     joblib.dump(model, MODEL_PATH)
     joblib.dump(scaler, SCALER_PATH)
     logging.info(f"Model saved to {MODEL_PATH}")

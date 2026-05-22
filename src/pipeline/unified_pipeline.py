@@ -9,7 +9,6 @@ from src.db import update_and_get_trend_async
 from src.alerting import trigger_alert
 
 async def detect_scam(project: str) -> Dict[str, Any]:
-    """Orchestrates concurrent execution of all analysis pipelines, with TTL Caching and Intelligence Routing."""
     cache_key = project.lower()
     if cache_key in risk_score_cache:
         logger.info(f"CACHE HIT: Returning fast cached results for {project}")
@@ -17,13 +16,11 @@ async def detect_scam(project: str) -> Dict[str, Any]:
 
     logger.info(f"Starting scam detection for project: {project}")
     try:
-        # Run pipelines concurrently to vastly improve latency
         offchain_result, onchain_result = await asyncio.gather(
             run_offchain_pipeline(project),
             run_onchain_pipeline(project)
         )
         
-        # Unpack Data Paths natively
         path_c_nlp_score, offchain_explanations, confidence_score = offchain_result
         path_a_ml_score, path_b_dl_score = onchain_result
         
@@ -34,9 +31,7 @@ async def detect_scam(project: str) -> Dict[str, Any]:
         if path_b_dl_score > 0.6:
             explanations.append("Graph DL detected highly connected scam topologies (wash trading).")
         
-        # ----------------------------------------------------
-        # TRIPLE-ENSEMBLE WEIGHTED VOTING LAYER
-        # ----------------------------------------------------
+       # Ensamble weightage
         w_ml = 0.35
         w_dl = 0.30
         w_nlp = 0.35
@@ -47,7 +42,7 @@ async def detect_scam(project: str) -> Dict[str, Any]:
             w_dl += 0.1
             w_nlp -= 0.2
         elif confidence_score > 0.8:
-            # Significant NLP community panic alerts
+            # NLP community panic alerts
             w_nlp += 0.15
             w_ml -= 0.10
             w_dl -= 0.05
@@ -55,11 +50,8 @@ async def detect_scam(project: str) -> Dict[str, Any]:
         final = (w_ml * path_a_ml_score) + (w_dl * path_b_dl_score) + (w_nlp * path_c_nlp_score)
         final_risk = min(max(final, 0.0), 1.0)
         
-        # ----------------------------------------------------
-        # Intelligence Layer Computations
-        # ----------------------------------------------------
         
-        # 1. Severity Classification
+        # Severity Classification
         if final >= 0.75:
             severity = "CRITICAL"
         elif final >= 0.5:
@@ -79,13 +71,13 @@ async def detect_scam(project: str) -> Dict[str, Any]:
         else:
             action = "LOW RISK"
             
-        # 3. Temporal Trend Extraction via Persistent DB
+        # Temporal Trend Extraction
         trend_status = await update_and_get_trend_async(cache_key, final, confidence_score)
         
         # Clean Explanations
         final_explanations = list(dict.fromkeys(explanations))[:5]
         
-        # 4. Alert Daemon Trigger
+        # Alert Trigger
         trigger_alert(project, severity, trend_status, final_explanations)
         
         logger.info(f"Completed analysis for {project}. Final Risk: {final:.4f} | Trend: {trend_status} | Severity: {severity}")
